@@ -1,0 +1,14 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+#define MAX_TOKEN_LENGTH 100
+
+//Defining all the token types
+typedef enum {
+    TOKEN_INT, TOKEN_IDENTIFIER, TOKEN_NUMBER, TOKEN_ASSIGN,
+    TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULTIPLY, TOKEN_DIVIDE,
+    TOKEN_IF, TOKEN_EQUAL, TOKEN_LPARENT, TOKEN_RPARENT,
+    TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_SEMICLN, TOKEN_UNKNOWN, TOKEN_EOF
+} TokenType;
+
