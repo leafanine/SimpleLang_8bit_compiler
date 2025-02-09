@@ -157,12 +157,22 @@ int main() {
         return 1;
     }
 
+    FILE *outputFile = fopen("tokens.txt", "w");
+    if (!outputFile) {
+        perror("Failed to open output file");
+        fclose(file);
+        return 1;
+    }
+
     Token token;
     do {
         getNxtToken(file, &token);
         printf("Token: %d, Text: %s\n", token.type, token.text);
+        fprintf(outputFile, "%d %s\n", token.type, token.text);
     } while (token.type != TOKEN_EOF);
 
     fclose(file);
+    fclose(outputFile);
+    printf("Tokens written to tokens.txt\n");
     return 0;
 }
