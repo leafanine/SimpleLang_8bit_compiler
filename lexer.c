@@ -19,6 +19,7 @@ typedef struct {
 } Token;
 
 void getNxtToken(FILE *file, Token *token) {
+    memset(token, 0, sizeof(Token));
     int c;
     while((c = fgetc(file)) != EOF) {
         if(isspace(c)) {
@@ -74,77 +75,80 @@ void getNxtToken(FILE *file, Token *token) {
                 token->text[0] = '=';
                 token->text[1] = '\0';
             }
-            return;
+            break;
+            
 
             //addition operator
             case '+':
             token->type = TOKEN_PLUS;
             token->text[0] = '+';
             token->text[1] = '\0';
-            return;
+            break;
 
             //subtraction operator
             case '-':
             token->type = TOKEN_MINUS;
             token->text[0] = '-';
             token->text[1] = '\0';
-            return;
+            break;
 
             //multiplication operator
             case '*':
             token->type = TOKEN_MULTIPLY;
             token->text[0] = '*';
             token->text[1] = '\0';
-            return;
+            break;
 
             //divison operator
             case '/':
             token->type = TOKEN_DIVIDE;
             token->text[0] = '/';
             token->text[1] = '\0';
-            return;
+            break;
 
             //left-parentheis
             case '(':
             token->type = TOKEN_LPARENT;
             token->text[0] = '(';
             token->text[1] = '\0';
-            return;
+            break;
 
             //right-parenthesis
             case ')':
             token->type = TOKEN_RPARENT;
             token->text[0] = ')';
             token->text[1] = '\0';
-            return;
+            break;
             
             //left-braces
             case '{':
             token->type = TOKEN_LBRACE;
             token->text[0] = '{';
             token->text[1] = '\0';
-            return;
+            break;
 
             //right-braces
             case '}':
             token->type = TOKEN_LBRACE;
             token->text[0] = '}';
             token->text[1] = '\0';
-            return;
+            break;
 
             //Semicolon
             case ';':
             token->type = TOKEN_SEMICLN;
             token->text[0] = ';';
             token->text[1] = '\0';
-            return;
+            break;
 
             //default switch
             default: token->type = TOKEN_UNKNOWN;
             token->text[0] = c;
             token->text[1] = '\0';
-            return;
+            break;
         }
+        token->text[1] = '\0';
+        return;
     }
     token->type = TOKEN_EOF;
     token->text[0]='\0';
@@ -165,11 +169,15 @@ int main() {
     }
 
     Token token;
-    do {
-        getNxtToken(file, &token);
+    getNxtToken(file, &token);
+    
+    while (token.type != TOKEN_EOF) {
         printf("Token: %d, Text: %s\n", token.type, token.text);
         fprintf(outputFile, "%d %s\n", token.type, token.text);
-    } while (token.type != TOKEN_EOF);
+        getNxtToken(file, &token);
+    }
+
+    fprintf(outputFile, "%d\n", TOKEN_EOF);
 
     fclose(file);
     fclose(outputFile);

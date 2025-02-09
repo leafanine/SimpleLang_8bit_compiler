@@ -154,16 +154,16 @@ ASTNode* parseStatement() {
 }
 
 ASTNode* parseProgram(Token* tokenList, int numTokens) {
-    printf("debug 2.1");
+    //printf("debug 2.1");
     tokens = tokenList; 
-    printf("debug 2.2");
+    //printf("debug 2.2");
     token_Index = 0;
-    printf("debug 2.3");
+    //printf("debug 2.3");
     nextToken(); 
 
-    printf("debug 2.4");
+    //printf("debug 2.4");
     ASTNode* programNode = makeNode(NODE_PROGRAM, NULL);
-    printf("debug 2.5");
+    //printf("debug 2.5");
     while (current_token.type != TOKEN_EOF) {
         ASTNode* statementNode = parseStatement();
         if (!statementNode) {
@@ -171,7 +171,7 @@ ASTNode* parseProgram(Token* tokenList, int numTokens) {
             exit(1);
         }
     }
-    printf("debug 2.6");
+    //printf("debug 2.6");
 
     return programNode;
 }
@@ -244,16 +244,17 @@ void readTokens(const char* filename) {
 
 // Main function
 int main() {
-    printf("debug 1");
+    //printf("debug 1");
     readTokens("tokens.txt");
 
-    printf("debug 2");
+    //printf("debug 2");
    
     ASTNode* program = parseProgram((Token*)tokenss, MAX_TOKENS);
 
-    printf("debug 3");
+    //printf("debug 3");
   
     printAST(program, 0);
 
+    printf("debug 4");
     return 0;
 }
