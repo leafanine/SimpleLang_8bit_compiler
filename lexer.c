@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define MAX_TOKEN_LENGTH 100
 
@@ -9,7 +10,9 @@ typedef enum {
     TOKEN_INT, TOKEN_IDENTIFIER, TOKEN_NUMBER, TOKEN_ASSIGN,
     TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULTIPLY, TOKEN_DIVIDE,
     TOKEN_IF, TOKEN_EQUAL, TOKEN_LPARENT, TOKEN_RPARENT,
-    TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_SEMICLN, TOKEN_UNKNOWN, TOKEN_EOF
+    TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_SEMICLN,
+    TOKEN_UNKNOWN,  // For unrecognized characters
+    TOKEN_EOF
 } TokenType;
 
 // Token structure
@@ -18,10 +21,12 @@ typedef struct {
     char text[MAX_TOKEN_LENGTH];
 } Token;
 
-void getNxtToken(FILE *file, Token *token) {
-    memset(token, 0, sizeof(Token)); // ✅ Prevents garbage values
+// Function to get the next token from the input file
+void getNextToken(FILE *file, Token *token) {
+    memset(token, 0, sizeof(Token)); // Clear token memory to avoid garbage values
     int c;
 
+    // Skip whitespace
     while ((c = fgetc(file)) != EOF) {
         if (isspace(c)) {
             continue;
@@ -36,7 +41,7 @@ void getNxtToken(FILE *file, Token *token) {
                     token->text[length++] = c;
                 }
             }
-            ungetc(c, file);
+            ungetc(c, file); // Push back the last character
             token->text[length] = '\0';
 
             if (strcmp(token->text, "int") == 0) {
@@ -58,7 +63,7 @@ void getNxtToken(FILE *file, Token *token) {
                     token->text[length++] = c;
                 }
             }
-            ungetc(c, file);
+            ungetc(c, file); // Push back the last character
             token->text[length] = '\0';
             token->type = TOKEN_NUMBER;
             return;
@@ -88,22 +93,23 @@ void getNxtToken(FILE *file, Token *token) {
             case ';': token->type = TOKEN_SEMICLN; strcpy(token->text, ";"); return;
 
             default:
+                // Handle unknown characters
+                fprintf(stderr, "[ERROR] Unknown character: '%c'\n", c);
                 token->type = TOKEN_UNKNOWN;
-                token->text[0] = c;
-                token->text[1] = '\0';
+                snprintf(token->text, MAX_TOKEN_LENGTH, "%c", c);
                 return;
         }
     }
 
-    // ✅ Properly mark EOF
+    // Properly mark EOF
     token->type = TOKEN_EOF;
-    token->text[0] = '\0';
+    strcpy(token->text, "<EOF>");
 }
 
 int main() {
     FILE *file = fopen("input.txt", "r");
     if (!file) {
-        perror("Unable to open the file!");
+        perror("Unable to open the input file!");
         return 1;
     }
 
@@ -115,16 +121,18 @@ int main() {
     }
 
     Token token;
-    getNxtToken(file, &token);
 
+    // Read and write tokens until EOF
+    getNextToken(file, &token);
     while (token.type != TOKEN_EOF) {
         printf("Token: %d, Text: %s\n", token.type, token.text);
         fprintf(outputFile, "%d %s\n", token.type, token.text);
-        getNxtToken(file, &token);
+        getNextToken(file, &token);
     }
 
     fclose(file);
     fclose(outputFile);
+
     printf("Tokens written to tokens.txt\n");
     return 0;
 }
