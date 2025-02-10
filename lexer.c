@@ -11,7 +11,7 @@ typedef enum {
     TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULTIPLY, TOKEN_DIVIDE,
     TOKEN_IF, TOKEN_EQUAL, TOKEN_LPARENT, TOKEN_RPARENT,
     TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_SEMICLN,
-    TOKEN_UNKNOWN,  // For unrecognized characters
+    TOKEN_UNKNOWN, // For unrecognized characters
     TOKEN_EOF
 } TokenType;
 
@@ -43,7 +43,6 @@ void getNextToken(FILE *file, Token *token) {
             }
             ungetc(c, file); // Push back the last character
             token->text[length] = '\0';
-
             if (strcmp(token->text, "int") == 0) {
                 token->type = TOKEN_INT;
             } else if (strcmp(token->text, "if") == 0) {
@@ -81,7 +80,6 @@ void getNextToken(FILE *file, Token *token) {
                     strcpy(token->text, "=");
                 }
                 return;
-
             case '+': token->type = TOKEN_PLUS; strcpy(token->text, "+"); return;
             case '-': token->type = TOKEN_MINUS; strcpy(token->text, "-"); return;
             case '*': token->type = TOKEN_MULTIPLY; strcpy(token->text, "*"); return;
@@ -91,7 +89,6 @@ void getNextToken(FILE *file, Token *token) {
             case '{': token->type = TOKEN_LBRACE; strcpy(token->text, "{"); return;
             case '}': token->type = TOKEN_RBRACE; strcpy(token->text, "}"); return;
             case ';': token->type = TOKEN_SEMICLN; strcpy(token->text, ";"); return;
-
             default:
                 // Handle unknown characters
                 fprintf(stderr, "[ERROR] Unknown character: '%c'\n", c);
@@ -103,7 +100,7 @@ void getNextToken(FILE *file, Token *token) {
 
     // Properly mark EOF
     token->type = TOKEN_EOF;
-    strcpy(token->text, "<EOF>");
+    strcpy(token->text, "");
 }
 
 int main() {
