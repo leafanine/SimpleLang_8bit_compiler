@@ -73,17 +73,29 @@ void nextToken() {
     } else {
         current_token.type = TOKEN_EOF;
     }
-    // for debug //printf("\nSucess going to next token(s).\n");
+    printf("[DEBUG] Moved to next token: %s (Type: %d)\n", current_token.text, current_token.type);
 }
 
 //parse declarations - to parse decalrations for example "int a;"
 ASTNode* parse_Declaration() {
+    printf("[DEBUG] Entering parse_Declaration with token: %s\n", current_token.text);
     nextToken();
+    printf("[DEBUG] After consuming 'int', current token: %s\n", current_token.text);
+
     ASTNode* node = makeNode(NODE_DECLARATION, current_token.text);
     nextToken();
+    printf("[DEBUG] After consuming identifier, current token: %s\n", current_token.text);
+
+    if (current_token.type != TOKEN_SEMICLN) {
+        fprintf(stderr, "[ERROR] Expected ';' but found: %s\n", current_token.text);
+        exit(1);
+    }
     nextToken();
+    printf("[DEBUG] After consuming ';', next token: %s\n", current_token.text);
+
     return node;
 }
+
 
 //Parse assignments - To parse syntax like "c = 6;"
 ASTNode* parse_Assignment() {
@@ -112,7 +124,7 @@ ASTNode* parse_Expression() {
     }
 
     // Handle binary operators (e.g., +, -)
-    while (current_token.type == TOKEN_PLUS || current_token.type == TOKEN_MINUS) {
+    while (current_token.type == TOKEN_PLUS || current_token.type == TOKEN_MINUS || current_token.type == TOKEN_EQUAL) {
         ASTNode* opNode = makeNode(NODE_BINARY_OP, current_token.text);
         nextToken();
         opNode->left = node;
@@ -126,13 +138,31 @@ ASTNode* parse_Expression() {
 //PARSING if and other causes! - leafanine
 ASTNode* parse_IF(){
     nextToken();
+    if (current_token.type != TOKEN_LPARENT) {
+        fprintf(stderr, "Syntax Error: Expected '(', found '%s'\n", current_token.text);
+        exit(1);
+    }
     nextToken();
 
     ASTNode* conditionNode = parse_Expression();
+    if (current_token.type != TOKEN_RPARENT) {
+        fprintf(stderr, "Syntax Error: Expected ')', found '%s'\n", current_token.text);
+        exit(1);
+    }
     nextToken();
+    if (current_token.type != TOKEN_LBRACE) {
+        fprintf(stderr, "Syntax Error: Expected '{', found '%s'\n", current_token.text);
+        exit(1);
+    }
     nextToken();
 
     ASTNode* body_Node = parseStatement();
+    if (current_token.type != TOKEN_RBRACE) {
+        fprintf(stderr, "Syntax Error: Expected '}', found '%s'\n", current_token.text);
+        exit(1);
+    }
+    nextToken();
+    
     ASTNode* ifNode = makeNode(NODE_IF, NULL);
     ifNode->left = conditionNode;
     ifNode->right = body_Node;
@@ -141,40 +171,57 @@ ASTNode* parse_IF(){
 
 //Parsing statements - if statement. I am sleepoy. -3AM
 ASTNode* parseStatement() {
+    printf("\n[DEBUG] Parsing statement for token: %s", current_token.text);
+
+    ASTNode* tempNode = NULL;
+
     if (current_token.type == TOKEN_INT) {
-        return parse_Declaration();
+        tempNode = parse_Declaration();
     } else if (current_token.type == TOKEN_IDENTIFIER) {
-        return parse_Assignment();
+        tempNode = parse_Assignment();
     } else if (current_token.type == TOKEN_IF) {
-        return parse_IF();
+        tempNode = parse_IF();
     } else {
         fprintf(stderr, "Unexpected token: %s\n", current_token.text);
         exit(1);
     }
+
+    nextToken();  // **Ensure the statement parsing consumes tokens**
+    return tempNode;
 }
 
-ASTNode* parseProgram(Token* tokenList, int numTokens) {
-    //printf("debug 2.1");
-    tokens = tokenList; 
-    //printf("debug 2.2");
-    token_Index = 0;
-    //printf("debug 2.3");
-    nextToken(); 
 
-    //printf("debug 2.4");
-    ASTNode* programNode = makeNode(NODE_PROGRAM, NULL);
-    //printf("debug 2.5");
+ASTNode* parseProgram() {
+    ASTNode* programNode = makeNode(NODE_PROGRAM, "Program");
+    ASTNode* lastNode = programNode;
+
+    printf("\n[DEBUG] Entering parseProgram()\n");
+
     while (current_token.type != TOKEN_EOF) {
+        printf("\n[DEBUG] Current token before parseStatement: %s", current_token.text);
         ASTNode* statementNode = parseStatement();
+
         if (!statementNode) {
-            fprintf(stderr, "Error: Failed to parse statement.\n");
+            fprintf(stderr, "[ERROR] parseStatement() returned NULL\n");
             exit(1);
         }
-    }
-    //printf("debug 2.6");
 
+        if (lastNode == programNode) {
+            programNode->left = statementNode;
+        } else {
+            lastNode->right = statementNode;
+        }
+        lastNode = statementNode;
+
+        nextToken();  // **Move to the next token after parsing a statement**
+        printf("\n[DEBUG] Next token after parseStatement: %s", current_token.text);
+    }
+
+    printf("\n[DEBUG] Exiting parseProgram()\n");
     return programNode;
 }
+
+
 
 void printAST(ASTNode* node, int depth) {
     if (!node) return;
@@ -244,14 +291,14 @@ void readTokens(const char* filename) {
 
 // Main function
 int main() {
-    //printf("debug 1");
+    printf("debug 1");
     readTokens("tokens.txt");
 
-    //printf("debug 2");
+    printf("debug 2");
    
     ASTNode* program = parseProgram((Token*)tokenss, MAX_TOKENS);
 
-    //printf("debug 3");
+    printf("debug 3");
   
     printAST(program, 0);
 
