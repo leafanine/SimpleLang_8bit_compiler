@@ -230,14 +230,16 @@ void readTokens(const char* filename) {
         perror("File does not exist");
         exit(1);
     }
+
     FILE* file = fopen(filename, "r");
     if (!file) {
         perror("Failed to open file");
         fprintf(stderr, "Filename: %s\n", filename);
         exit(1);
     }
+
     int i = 0;
-    while (fscanf(file, "%d %s", (int*)&tokenss[i].type, tokenss[i].text) != EOF) {
+    while (fscanf(file, "%d %s", &tokenss[i].type, tokenss[i].text) != EOF) {
         printf("Read token %d: type=%d, text=%s\n", i, tokenss[i].type, tokenss[i].text);
         i++;
         if (i >= MAX_TOKENS) {
@@ -245,8 +247,15 @@ void readTokens(const char* filename) {
             break;
         }
     }
-    tokenss[i].type = TOKEN_EOF;
+
+    tokenss[i].type = TOKEN_EOF; // Add EOF token at the end
     fclose(file);
+
+    // Initialize global pointer 'tokens' to point to 'tokenss'
+    tokens = tokenss;
+
+    // Reset token_Index
+    token_Index = 0;
 }
 
 void validateTokens() {
