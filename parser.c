@@ -10,6 +10,11 @@ typedef enum {
     TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_SEMICLN, TOKEN_UNKNOWN, TOKEN_EOF
 } TokenType;
 
+/*typedef enum{
+    NODE_NUM, NDE_VAR, NODE_ADD, NODE_SUB,
+    NODE_MUL, NODE_DIV, NODE_ASSIGN
+} ASMNodeType;*/
+
 typedef struct {
     TokenType type;
     char text[100];
@@ -23,7 +28,9 @@ typedef enum {
     NODE_NUMBER,
     NODE_VARIABLE,
     NODE_CONDITION,
-    NODE_IF
+    NODE_IF,
+    NODE_JUMP,
+    NODE_LABEL
 } NodeType;
 
 typedef struct ASTNode {
@@ -214,6 +221,76 @@ void freeAST(ASTNode* node) {
     freeAST(node->right);
     free(node);
 }
+//Code generation to generate ASM code
+void generateCode(ASTNode* node) {
+    if (!node) return;
+
+    switch (node->type) {
+        case NODE_PROGRAM:
+            // Generate code for all statements in sequence
+            generateCode(node->left);  
+            generateCode(node->right);
+            break;
+
+        case NODE_DECLARATION:
+            // Variable declaration (Reserve space in memory)
+            printf("; Declaring variable: %s\n", node->text);
+            break;
+
+        case NODE_ASSIGNMENT:
+            // Generate right-hand side (expression)
+            generateCode(node->right);
+            // Store result in the left variable
+            printf("STORE %s\n", node->left->text);
+            break;
+
+        case NODE_BINARY_OP:
+            // Generate left operand
+            generateCode(node->left);
+            printf("PUSH ACC\n");  // Push left operand to stack
+            // Generate right operand
+            generateCode(node->right);
+            printf("POP B\n");  // Pop left operand into B register
+
+            // Perform the operation
+            if (strcmp(node->text, "+") == 0) printf("ADD B\n");
+            else if (strcmp(node->text, "-") == 0) printf("SUB B\n");
+            else if (strcmp(node->text, "*") == 0) printf("MUL B\n");
+            else if (strcmp(node->text, "/") == 0) printf("DIV B\n");
+            break;
+
+        case NODE_NUMBER:
+            printf("LOAD ACC, #%s\n", node->text);  // Load number into accumulator
+            break;
+
+        case NODE_VARIABLE:
+            printf("LOAD ACC, %s\n", node->text);  // Load variable into accumulator
+            break;
+
+        case NODE_CONDITION:
+            generateCode(node->left);  // Evaluate left operand
+            printf("PUSH ACC\n");
+            generateCode(node->right);  // Evaluate right operand
+            printf("POP B\n");
+
+            // Compare values and set flags
+            if (strcmp(node->text, "<") == 0) printf("CMP B, ACC\nJLT L\n");
+            else if (strcmp(node->text, ">") == 0) printf("CMP B, ACC\nJGT L\n");
+            else if (strcmp(node->text, "=") == 0) printf("CMP B, ACC\nJEQ L\n");
+            break;
+
+        case NODE_IF:
+            generateCode(node->left);  // Condition
+            printf("JMP L\n");
+            printf("L:\n");
+            generateCode(node->right);  // If body
+            break;
+
+        default:
+            fprintf(stderr, "[ERROR] Unknown AST Node type: %d\n", node->type);
+            exit(1);
+    }
+}
 
 #define MAX_TOKENS 1000
 #define TOKEN_EOF -1
@@ -223,7 +300,7 @@ typedef struct {
     char text[100];
 } TokenNew;
 
-TokenNew tokenss[MAX_TOKENS];
+Token tokenss[MAX_TOKENS];
 
 void readTokens(const char* filename) {
     if (access(filename, F_OK) != 0) {
@@ -271,18 +348,29 @@ void validateTokens() {
 
 
 int main() {
-    printf("debug 1");
+    printf("debug 1\n");
     readTokens("tokens.txt");
     validateTokens();
     printf("debug 2");
     ASTNode* program = parseProgram((Token*)tokenss, MAX_TOKENS);
     if (program) {
-        printf("debug 3");
+        printf("debug 3\n");
         printAST(program, 0);
         printf("debug 4");
         freeAST(program);
     } else {
         fprintf(stderr, "Parsing failed\n");
     }
+    printf("\ndebug 5\n");
+
+    
+    printf("\n__Start ASM code generation__\n");
+    generateCode(program);
+    FILE *asmFile = fopen("output.asm", "w");
+    if (!asmFile) {
+        fprintf(stderr, "Error opening output.asm\n");
+        exit(1);
+    }
+
     return 0;
 }
