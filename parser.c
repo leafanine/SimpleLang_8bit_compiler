@@ -34,6 +34,7 @@ typedef enum {
 } NodeType;
 
 typedef struct ASTNode {
+    int visit;
     NodeType type;
     struct ASTNode* left;
     struct ASTNode* right;
@@ -221,9 +222,22 @@ void freeAST(ASTNode* node) {
     freeAST(node->right);
     free(node);
 }
+
+//code-gen 
+int varCount = 0, conditional_reached = UNSET, regA = NOT_USING, regB = NOT_USING, textSegflag = UNSET;
+
+void generateDataSeg(FILE *outputfile, int varcount, ASTNode *node){
+    if(node!=NULL && node->type==NODE_VARIABLE){
+        fprintf(outputfile, "%s = %d\n", node->text, varcount);
+        node->visit = VISI
+    }
+}
 //Code generation to generate ASM code
-void generateCode(ASTNode* node) {
-    if (!node) return;
+void generateCode(ASTNode* node, FILE *outputfile) {
+    if (!node) {
+        printf("\nAST is empty.\n");
+        return;
+    }
 
     switch (node->type) {
         case NODE_PROGRAM:

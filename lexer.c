@@ -2,24 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-#define MAX_TOKEN_LENGTH 100
-
-// Defining all the token types
-typedef enum {
-    TOKEN_INT, TOKEN_IDENTIFIER, TOKEN_NUMBER, TOKEN_ASSIGN,
-    TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULTIPLY, TOKEN_DIVIDE,
-    TOKEN_IF, TOKEN_EQUAL, TOKEN_LPARENT, TOKEN_RPARENT,
-    TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_SEMICLN,
-    TOKEN_UNKNOWN, // For unrecognized characters
-    TOKEN_EOF
-} TokenType;
-
-// Token structure
-typedef struct {
-    TokenType type;
-    char text[MAX_TOKEN_LENGTH];
-} Token;
+#include "lexer.h"
 
 // Function to get the next token from the input file
 void getNextToken(FILE *file, Token *token) {
